@@ -85,6 +85,7 @@ function Layout() {
 		hasBlockSelected,
 		showMostUsedBlocks,
 		isInserterOpened,
+		showIconLabels,
 	} = useSelect( ( select ) => {
 		return {
 			hasFixedToolbar: select( 'core/edit-post' ).isFeatureActive(
@@ -114,12 +115,16 @@ function Layout() {
 			nextShortcut: select(
 				'core/keyboard-shortcuts'
 			).getAllShortcutRawKeyCombinations( 'core/edit-post/next-region' ),
+			showIconLabels: select( 'core/edit-post' ).isFeatureActive(
+				'showIconLabels'
+			),
 		};
 	}, [] );
 	const className = classnames( 'edit-post-layout', 'is-mode-' + mode, {
 		'is-sidebar-opened': sidebarIsOpened,
 		'has-fixed-toolbar': hasFixedToolbar,
 		'has-metaboxes': hasActiveMetaboxes,
+		'show-icon-labels': showIconLabels,
 	} );
 	const openSidebarPanel = () =>
 		openGeneralSidebar(
@@ -163,7 +168,7 @@ function Layout() {
 			<LocalAutosaveMonitor />
 			<EditPostKeyboardShortcuts />
 			<EditorKeyboardShortcutsRegister />
-			<SettingsSidebar />
+			<SettingsSidebar showTooltip={ ! showIconLabels } />
 			<FocusReturnProvider>
 				<InterfaceSkeleton
 					className={ className }
