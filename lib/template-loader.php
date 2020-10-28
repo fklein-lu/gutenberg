@@ -447,3 +447,20 @@ function gutenberg_template_render_without_post_block_context( $context ) {
 	return $context;
 }
 add_filter( 'render_block_context', 'gutenberg_template_render_without_post_block_context' );
+
+/**
+ * Determine whether a theme full-site editing compatible.
+ *
+ * @param string $stylesheet_or_template The stylesheet or template name of the theme.
+ *
+ * @return bool Whether the theme is full-site editing compatible.
+ */
+function gutenberg_is_block_based_theme( $stylesheet_or_template ) {
+	$index_template_path = get_theme_root( $stylesheet_or_template ) . '/' . $stylesheet_or_template . '/block-templates/index.html';
+
+	return 0 === validate_file( $index_template_path ) && is_readable( $index_template_path );
+}
+
+function gutenberg_is_fse_theme() {
+	return is_readable( locate_template( 'block-templates/index.html' ) );
+}

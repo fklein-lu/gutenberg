@@ -1,0 +1,4 @@
+<?php
+/**
+ * Classic theme fixture.
+ */
