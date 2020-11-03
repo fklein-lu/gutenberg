@@ -148,19 +148,9 @@ function create_auto_draft_for_template_part_block( $block ) {
 			// E.g. The server could send back post ID 1 to the client, preload,
 			// and create another auto-draft. So, if the client tries to resolve the
 			// post ID from the slug and theme, it won't match with what the server sent.
-			$template_part_query = new WP_Query(
-				array(
-					'post_type'      => 'wp_template_part',
-					'post_status'    => array( 'publish', 'auto-draft' ),
-					'title'          => $block['attrs']['slug'],
-					'meta_key'       => 'theme',
-					'meta_value'     => $block['attrs']['theme'],
-					'posts_per_page' => 1,
-					'no_found_rows'  => true,
-				)
-			);
-			$template_part_post  = $template_part_query->have_posts() ? $template_part_query->next_post() : null;
-			if ( $template_part_post && 'auto-draft' !== $template_part_post->post_status ) {
+			$template_part_post = gutenberg_get_template_part_post( $block['attrs']['slug'], $block['attrs']['theme'] );
+
+			if ( $template_part_post instanceof WP_Post && 'auto-draft' !== $template_part_post->post_status ) {
 				$template_part_id = $template_part_post->ID;
 			} else {
 				// Template part is not customized, get it from a file and make an auto-draft for it, unless one already exists
@@ -451,3 +441,41 @@ function gutenberg_template_render_without_post_block_context( $context ) {
 	return $context;
 }
 add_filter( 'render_block_context', 'gutenberg_template_render_without_post_block_context' );
+
+/**
+ * Retrieve a template part post for a theme.
+ *
+ * @param string $slug  Slug of the template part.
+ * @param string $theme Slug of the theme.
+ *
+ * @return WP_Error|null|WP_Post Returns a WP_Post object on success. Else a WP_Error if more than one post is found,
+ *                               or null if no posts are found.
+ */
+function gutenberg_get_template_part_post( $slug, $theme ) {
+	$query = new WP_Query(
+		array(
+			'post_type'   => 'wp_template_part',
+			'post_status' => array( 'publish', 'auto-draft' ),
+			'slug'        => $slug,
+			'meta_key'    => 'theme',
+			'meta_value'  => $theme,
+		)
+	);
+
+	if ( $query->found_posts > 1 ) {
+		return new WP_Error(
+			'fse-duplicate-template-part',
+			sprintf(
+				'Found duplicate %s template part for %s theme.',
+				$slug,
+				$theme
+			)
+		);
+	}
+
+	if ( 0 === $query->found_posts ) {
+		return null;
+	}
+
+	return $query->posts[0];
+}
